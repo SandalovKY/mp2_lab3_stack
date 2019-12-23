@@ -18,8 +18,8 @@ public:
 	bool isEmpty() const; // проверка стека на пустоту
 	bool isFull() const; // проверка стека на полноту
 	void Put(const T& Val); // помещение нового элемента в стек
-	virtual T Get(); // выталкивание элемента из стека
-	T CheckLast(); // просмотр последнего элемента стека
+	T Get(); // выталкивание элемента из стека
+	T const& CheckLast() const; // просмотр последнего элемента стека
 };
 //..............................................................................................//
 template<typename T>
@@ -31,6 +31,9 @@ TStack<T>::TStack(int size) { // конструктор с параметрами(по умолчанию)
 	MemSize = size;
 	DataCount = 0;
 	pMem = new T[MemSize];
+	for (int i = 0; i < MemSize; ++i) {
+		pMem[i] = 0;
+	}
 }
 //...............................................................................................//
 template<typename T>
@@ -88,14 +91,13 @@ T TStack<T>::Get() { // выталкивание элемента из стека
 	if (isEmpty())
 		throw std::out_of_range("—тек пуст!");
 	else {
-		T tmp = pMem[DataCount - 1];
 		DataCount--;
-		return(tmp);
+		return(pMem[DataCount]);
 	}
 }
 //..................................................................................................//
 template<typename T>
-T TStack<T>::CheckLast() { // просмотр последнего элемента стека
+T const&  TStack<T>::CheckLast() const{ // просмотр последнего элемента стека
 	if (isEmpty())
 		throw std::out_of_range("—тек пуст!");
 	return(pMem[DataCount - 1]);

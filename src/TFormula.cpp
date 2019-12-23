@@ -5,19 +5,18 @@
 #include <string>
 
 void TFormula::SetOpTable() { // задает списоп применимых в формуле операций, а так же их приоритеты
-	operations[0] = '(';
-	operations[1] = ')';
-	operations[2] = '+';
-	operations[3] = '-';
-	operations[4] = '*';
-	operations[5] = '/';
-
-	priorities[0] = 0;
-	priorities[1] = 1;
-	priorities[2] = 2;
-	priorities[3] = 2;
-	priorities[4] = 3;
-	priorities[5] = 3;
+	ops[0].operation = '(';
+	ops[0].priority = 0;
+	ops[1].operation = ')';
+	ops[1].priority = 1;
+	ops[2].operation = '+';
+	ops[2].priority = 2;
+	ops[3].operation = '-';
+	ops[3].priority = 2;
+	ops[4].operation = '*';
+	ops[4].priority = 3;
+	ops[5].operation = '/';
+	ops[5].priority = 3;
 }
 
 void PrintErrTable(int Brackets[], int brckts, int erCnt) { // печать таблицы с ошибочной расстановкой скобок
@@ -37,61 +36,62 @@ void PrintErrTable(int Brackets[], int brckts, int erCnt) { // печать таблицы с 
 
 TFormula::TFormula() { // конструктор по умолчанию
 	SetOpTable();
-	infSize = 0;
-	postSize = 0;
+	infix.size = 0;
+	postfix.size = 0;
+	infix.Frml[0] = '\0';
+	postfix.Frml[0] = '\0';
 }
 
-TFormula::TFormula(char const form[]) { // конструктор преобразования типа
-	SetOpTable();
+TFormula::TFormula(char* form):TFormula() { // конструктор преобразования типа
 	SetInfixForm(form);
 }
 
-TFormula::TFormula(std::string form) { // конструктор преобразования типа
-	SetOpTable();
+TFormula::TFormula(std::string const& form):TFormula() { // конструктор преобразования типа
 	SetInfixForm(form);
 }
 
-void TFormula::SetInfixForm(char const form[]) { // позволяет поменять исходную инфиксную форму
+void TFormula::SetInfixForm(char* form) { // позволяет поменять исходную инфиксную форму
 	int counter = 0;
 	while (form[counter] != '\0') {
 		if (counter > MaxLength - 1)
 			throw std::out_of_range("Попытка присвоить формульной строке значение строки, превосходящей максимально возможную длину формулы");
-		Infix[counter] = form[counter];
+		infix.Frml[counter] = form[counter];
 		counter++;
 	}
-	Infix[counter] = '\0';
-	infSize = counter;
-	postSize = 0;
+	infix.Frml[counter] = '\0';
+	infix.size = counter;
+	postfix.size = 0;
 	int br[MaxLength];
 	int brckts;
-	int erCnt = FormulaChecker(br, Infix, brckts);
+	int erCnt = FormulaChecker(br, infix.Frml, brckts);
 	if (erCnt) {
 		PrintErrTable(br, brckts, erCnt);
 		throw std::logic_error("Неверная запись исходной формулы");
 	}
+	FormulaConverter();
 }
 
-void TFormula::SetInfixForm(std::string form) { // позволяет поменять исходную инфиксную форму
+void TFormula::SetInfixForm(std::string const& form) { // позволяет поменять исходную инфиксную форму
 	if (form.size() > MaxLength)
 		throw std::out_of_range("Попытка присвоить формульной строке значение строки, превосходящей максимально возможную длину формулы");
 	int counter = 0;
 	for (; counter < form.size(); ++counter) {
-		Infix[counter] = form[counter];
+		infix.Frml[counter] = form[counter];
 	}
-	Infix[counter] = '\0';
-	infSize = counter;
-	postSize = 0;
+	infix.Frml[counter] = '\0';
+	infix.size = counter;
+	postfix.size = 0;
 	int br[MaxLength];
 	int brckts;
-	int erCnt = FormulaChecker(br, Infix, brckts);
+	int erCnt = FormulaChecker(br, infix.Frml, brckts);
 	if (erCnt) {
 		PrintErrTable(br, brckts, erCnt);
 		throw std::logic_error("Неверная запись исходной формулы");
 	}
-
+	FormulaConverter();
 }
 
-int TFormula::FormulaChecker(int* Brackets, char const form[], int& size) { // проверяет исходную формулу на корректность
+int TFormula::FormulaChecker(int* Brackets, char const* form, int& size) const { // проверяет исходную формулу на корректность
 	TStack<int> a;
 	int cnt = 1;
 	size = 0;
@@ -126,31 +126,31 @@ int TFormula::FormulaChecker(int* Brackets, char const form[], int& size) { // п
 void TFormula::FormulaConverter() { // преобразование инфиксной записи в постфиксную
 	int cnt = 0;
 	TStack<char> symb;
-	for (int i = 0; i < infSize; ++i) {
+	for (int i = 0; i < infix.size; ++i) {
 		bool flag = true;
 		for (int j = 0; j < OPER; ++j) {
-			if (Infix[i] == operations[j]) {
+			if (infix.Frml[i] == ops[j].operation) {
 				flag = false;
 				if (symb.isEmpty()) {
 					symb.Put(j);
 				}
 				else {
-					if (priorities[symb.CheckLast()] < priorities[j] && priorities[j] > 1) {
+					if (ops[symb.CheckLast()].priority < ops[j].priority && ops[j].priority > 1) {
 						symb.Put(j);
 					}
 					else {
-						if (priorities[j] == 0) {
+						if (ops[j].priority == 0) {
 							symb.Put(j);
 						}
-						if (priorities[j] == 1) {
-							while (!symb.isEmpty() && priorities[symb.CheckLast()] > 0) {
-								Postfix[cnt++] = operations[symb.Get()];
+						if (ops[j].priority == 1) {
+							while (!symb.isEmpty() && ops[symb.CheckLast()].priority > 0) {
+								postfix.Frml[cnt++] = ops[symb.Get()].operation;
 							}
 							symb.Get();
 						}
-						if (priorities[j] > 1) {
-							while (!symb.isEmpty() && priorities[symb.CheckLast()] >= priorities[j]) {
-								Postfix[cnt++] = operations[symb.Get()];
+						if (ops[j].priority > 1) {
+							while (!symb.isEmpty() && ops[symb.CheckLast()].priority >= ops[j].priority ) {
+								postfix.Frml[cnt++] = ops[symb.Get()].operation;
 							}
 							symb.Put(j);
 						}
@@ -159,52 +159,52 @@ void TFormula::FormulaConverter() { // преобразование инфиксной записи в постфик
 				break;
 			}
 		}
-		if (flag && ((Infix[i] >= 48 && Infix[i] <= 57) || Infix[i] == 46 || Infix[i] == 44)) {
-			Postfix[cnt++] = Infix[i];
-			if (i == infSize - 1)
-				Postfix[cnt++] = ' ';
+		if (flag && ((infix.Frml[i] >= 48 && infix.Frml[i] <= 57) || infix.Frml[i] == 46 || infix.Frml[i] == 44)) {
+			postfix.Frml[cnt++] = infix.Frml[i];
+			if (i == infix.size - 1)
+				postfix.Frml[cnt++] = ' ';
 			else {
 				bool tr = false;
 				for (int j = 0; j < OPER; ++j) {
-					if (Infix[i + 1] == operations[j] || Infix[i + 1] == ' ')
+					if (infix.Frml[i + 1] == ops[j].operation || infix.Frml[i + 1] == ' ')
 						tr = true;
 				}
 				if (tr)
-					Postfix[cnt++] = ' ';
+					postfix.Frml[cnt++] = ' ';
 			}
 		}
 		else
-			if (flag && Infix[i] != ' ')
+			if (flag && infix.Frml[i] != ' ')
 				throw std::logic_error("В записи выражения используются недопустивые символы");
 	}
 	while (!symb.isEmpty())
 	{
-		Postfix[cnt++] = operations[symb.Get()];
+		postfix.Frml[cnt++]  = ops[symb.Get()].operation;
 	}
-	Postfix[cnt] = '\0';
-	postSize = cnt;
+	postfix.Frml[cnt] = '\0';
+	postfix.size = cnt;
 }
 
 double TFormula::Calculate() { // произведение вычислений
-	if (postSize == 0)
+	if (postfix.size == 0)
 		FormulaConverter();
-	if (postSize == 0)
-		return 0;
+	if (postfix.size == 0)
+		throw std::logic_error("Нет выражения, результат которого можно было бы вычислить");
 	TStack<double> st;
 	double tmp = 0;
 	int cnt = 0;
 	int flp = 0;
-	for (int i = 0; i < postSize; ++i) {
+	for (int i = 0; i < postfix.size; ++i) {
 		bool flag = true;
 		for (int j = 2; j < OPER; ++j) {
-			if (Postfix[i] == operations[j]) {
+			if (postfix.Frml[i] == ops[j].operation) {
 				flag = false;
 				if (st.isEmpty())
 					throw std::logic_error("нет операндов для применения знака операции");
 				tmp = st.Get();
 				if (st.isEmpty())
 					throw std::logic_error("нет второго операнда для применения знака операции");
-				switch (operations[j])
+				switch (ops[j].operation)
 				{
 				case '+':
 				{
@@ -235,14 +235,14 @@ double TFormula::Calculate() { // произведение вычислений
 				st.Put(tmp);
 			}
 		}
-		if (Postfix[i] == '.' || Postfix[i] == ',') {
-			if(Postfix[i+1] != ' ')
+		if (postfix.Frml[i] == '.' || postfix.Frml[i] == ',') {
+			if(postfix.Frml[i + 1] != ' ')
 				flp++;
 		}
-		if (flag && Postfix[i] != ' ' && Postfix[i] != '.' && Postfix[i] != ',') {
+		if (flag && postfix.Frml[i] != ' ' && postfix.Frml[i] != '.' && postfix.Frml[i] != ',') {
 			if (flp == 0) {
-				if (Postfix[i + 1] == ' ' || Postfix[i + 1] == '.' || Postfix[i + 1] == ',') {
-					tmp = Postfix[i] - 48;
+				if (postfix.Frml[i + 1] == ' ' || postfix.Frml[i + 1] == '.' || postfix.Frml[i + 1] == ',') {
+					tmp = postfix.Frml[i] - 48;
 					int mn = 10;
 					while (cnt > 0) {
 						tmp += st.Get() * mn;
@@ -252,15 +252,15 @@ double TFormula::Calculate() { // произведение вычислений
 					st.Put(tmp);
 				}
 				else {
-					st.Put(Postfix[i] - 48);
+					st.Put(postfix.Frml[i] - 48);
 					cnt++;
 				}
 			}
 			else {
 				tmp = st.Get();
-				tmp += pow(10, flp * -1) * (Postfix[i] - 48);
+				tmp += pow(10, flp * -1) * (postfix.Frml[i] - 48);
 				st.Put(tmp);
-				if (Postfix[i + 1] == ' ')
+				if (postfix.Frml[i + 1] == ' ')
 					flp = 0;
 				else
 					flp++;
@@ -271,9 +271,9 @@ double TFormula::Calculate() { // произведение вычислений
 }
 
 char const*  TFormula::GetInfixFormula() const { // возвращает инфиксную форму записи
-	return Infix;
+	return infix.Frml;
 }
 
 char const* TFormula::GetPostfixFormula() const { // возвращает постфиксную форму записи
-	return Postfix;
+	return postfix.Frml;
 }
