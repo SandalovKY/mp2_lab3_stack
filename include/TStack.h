@@ -1,48 +1,51 @@
 #ifndef TSTACK_H
 #define TSTACK_H
 #include <iostream>
-const int maxMemSize = 100;
+const int maxMemSize = 100; // максимальная длина стека
 
 template<typename T>
-class TStack
-{
+class TStack {
 protected:
-	T* pMem;
-	int MemSize;
-	int DataCount;
+	T* pMem; // массив элементов стека
+	int MemSize; // размер стека
+	int DataCount; // количество элементов стека
 public:
-	TStack(int size = maxMemSize);
-	TStack(TStack const& st);
-	~TStack();
+	TStack(int size = maxMemSize); // конструктор с параметрами/по молчанию
+	TStack(TStack const& st); // конструктор копирования
+	~TStack(); // деструктор
 
-	TStack& operator=(TStack const& st);
-	bool isEmpty() const;
-	bool isFull() const;
-	void Put(const T& Val);
-	virtual T Get();
-	T CheckLast();
+	TStack& operator=(TStack const& st); // операция присваивания
+	bool isEmpty() const; // проверка стека на пустоту
+	bool isFull() const; // проверка стека на полноту
+	void Put(const T& Val); // помещение нового элемента в стек
+	T Get(); // выталкивание элемента из стека
+	T const& CheckLast() const; // просмотр последнего элемента стека
 };
-
+//..............................................................................................//
 template<typename T>
-TStack<T>::TStack(int size) {
+TStack<T>::TStack(int size) { // конструктор с параметрами(по умолчанию)
 	if (size < 0 || size > maxMemSize)
 		throw std::out_of_range("Было введено некорректное значение длины создаваемого стека");
-	if (size == 0)
-		size = maxMemSize;
+	/*if (size == 0)
+		size = maxMemSize;*/
 	MemSize = size;
 	DataCount = 0;
 	pMem = new T[MemSize];
+	for (int i = 0; i < MemSize; ++i) {
+		pMem[i] = 0;
+	}
 }
-
+//...............................................................................................//
 template<typename T>
-TStack<T>::~TStack() {
+TStack<T>::~TStack() { // деструктор
 	if (pMem != NULL) {
 		delete[] pMem;
 		pMem = NULL;
 	}
 }
+//...............................................................................................//
 template<typename T>
-TStack<T>::TStack(TStack const& st) {
+TStack<T>::TStack(TStack const& st) { //конструктор копирования
 	MemSize = st.MemSize;
 	DataCount = st.DataCount;
 	pMem = new T[MemSize];
@@ -50,9 +53,9 @@ TStack<T>::TStack(TStack const& st) {
 		pMem[i] = st.pMem[i];
 	}
 }
-
+//................................................................................................//
 template<typename T>
-TStack<T>& TStack<T>::operator=(TStack const& st) {
+TStack<T>& TStack<T>::operator=(TStack const& st) { // операция присваивания
 	if (this != &st) {
 		if (MemSize != st.MemSize) {
 			delete[] pMem;
@@ -66,15 +69,15 @@ TStack<T>& TStack<T>::operator=(TStack const& st) {
 	}
 	return *this;
 }
-
+//.................................................................................................//
 template<typename T>
-bool TStack<T>::isEmpty() const { return (DataCount == 0); }
-
+bool TStack<T>::isEmpty() const { return (DataCount == 0); } // проверка на пустоту
+//.................................................................................................//
 template<typename T>
-bool TStack<T>::isFull() const { return (DataCount == MemSize); }
-
+bool TStack<T>::isFull() const { return (DataCount == MemSize); } // проверка на полноту
+//.................................................................................................//
 template<typename T>
-void TStack<T>::Put(const T& Val) {
+void TStack<T>::Put(const T& Val) { // добавление элемента в стек
 	if (isFull())
 		throw std::out_of_range("Стек полон!");
 	else {
@@ -82,20 +85,21 @@ void TStack<T>::Put(const T& Val) {
 		pMem[DataCount - 1] = Val;
 	}
 }
-
+//.................................................................................................//
 template<typename T>
-T TStack<T>::Get() {
+T TStack<T>::Get() { // выталкивание элемента из стека
 	if (isEmpty())
 		throw std::out_of_range("Стек пуст!");
 	else {
-		T tmp = pMem[DataCount - 1];
 		DataCount--;
-		return(tmp);
+		return(pMem[DataCount]);
 	}
 }
-
+//..................................................................................................//
 template<typename T>
-T TStack<T>::CheckLast() {
+T const&  TStack<T>::CheckLast() const{ // просмотр последнего элемента стека
+	if (isEmpty())
+		throw std::out_of_range("Стек пуст!");
 	return(pMem[DataCount - 1]);
 }
 

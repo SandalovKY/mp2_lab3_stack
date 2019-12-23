@@ -1,29 +1,41 @@
 #ifndef TFORMULA_H
 #define TFORMULA_H
 #include "TStack.h"
-const int MaxLength = 255;
-const int OPER = 6;
+#include <string>
+const int MaxLength = 256; // максимальная длина исходной формулы
+const int OPER = 6; // число допустимых операций в выражении
+struct Operations {
+	char operation;
+	int priority;
+};
+struct Frmla {
+	int size; // длина формулы
+	char Frml[MaxLength]; // сама формула
+};
 class TFormula {
 private:
 
-	int infSize;
-	int postSize;
-	char Infix[MaxLength];
-	char Postfix[MaxLength];
+	Frmla infix; // инфиксная фома записи числа
+	Frmla postfix; // постфиксная форма записи
 
-	char operations[OPER];
-	int priorities[OPER];
-
-	void SetOpTable();
-	void FormulaConverter();
-	bool FormulaChecker(char form[], int size);
+	Operations ops[OPER]; // операции, которые можно применять в формуле
+	void SetOpTable(); // метод, задающий выше указанный список
 
 public:
-	TFormula();
-	TFormula(char const form[]);
-	void SetInfixForm(char const form[]);
-	char const* GetInfixFormula() const;
-	char const* GetPostfixFormula() const;
-	double Calculate();
-};
+	TFormula(); // конструктор по умолчанию
+	TFormula(char* form); // конструктор преобразования типа
+	TFormula(std::string const& form); // конструктор преобразования типа
+	void SetInfixForm(char* form); // функция, позволяющая поменять исходную инфиксную формулу
+	void SetInfixForm(std::string const& form); // функция, позволяющая поменять исходную инфиксную формулу
+
+	void FormulaConverter(); // конвертация формулы в постфиксную форму
+	int FormulaChecker(int* Brackets, int& size) const; // проверка правильность записанной исходной формулы
+	char const* GetInfixFormula() const; // возвращает инфиксную форму записи
+	char const* GetPostfixFormula() const; // возвращает постфиксную форму записи
+	int const GetInfixSize() const { return infix.size; }
+	int const GetPostfixSize() const { return postfix.size; }
+
+	double Calculate(); // вычисление значение выражения
+	};
+
 #endif
