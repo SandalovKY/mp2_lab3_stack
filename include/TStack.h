@@ -26,8 +26,8 @@ template<typename T>
 TStack<T>::TStack(int size) { // конструктор с параметрами(по умолчанию)
 	if (size < 0 || size > maxMemSize)
 		throw std::out_of_range("Было введено некорректное значение длины создаваемого стека");
-	if (size == 0)
-		size = maxMemSize;
+	/*if (size == 0)
+		size = maxMemSize;*/
 	MemSize = size;
 	DataCount = 0;
 	pMem = new T[MemSize];

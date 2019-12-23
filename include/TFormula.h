@@ -20,8 +20,6 @@ private:
 
 	Operations ops[OPER]; // операции, которые можно примен€ть в формуле
 	void SetOpTable(); // метод, задающий выше указанный список
-	void FormulaConverter(); // конвертаци€ формулы в постфиксную форму
-	int FormulaChecker(int* Brackets, char const* form, int& size) const; // проверка правильность записанной исходной формулы
 
 public:
 	TFormula(); // конструктор по умолчанию
@@ -30,9 +28,12 @@ public:
 	void SetInfixForm(char* form); // функци€, позвол€юща€ помен€ть исходную инфиксную формулу
 	void SetInfixForm(std::string const& form); // функци€, позвол€юща€ помен€ть исходную инфиксную формулу
 
-
+	void FormulaConverter(); // конвертаци€ формулы в постфиксную форму
+	int FormulaChecker(int* Brackets, int& size) const; // проверка правильность записанной исходной формулы
 	char const* GetInfixFormula() const; // возвращает инфиксную форму записи
 	char const* GetPostfixFormula() const; // возвращает постфиксную форму записи
+	int const GetInfixSize() const { return infix.size; }
+	int const GetPostfixSize() const { return postfix.size; }
 
 	double Calculate(); // вычисление значение выражени€
 	};

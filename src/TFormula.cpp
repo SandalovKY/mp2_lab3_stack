@@ -63,12 +63,6 @@ void TFormula::SetInfixForm(char* form) { // позвол€ет помен€ть исходную инфиксн
 	postfix.size = 0;
 	int br[MaxLength];
 	int brckts;
-	int erCnt = FormulaChecker(br, infix.Frml, brckts);
-	if (erCnt) {
-		PrintErrTable(br, brckts, erCnt);
-		throw std::logic_error("Ќеверна€ запись исходной формулы");
-	}
-	FormulaConverter();
 }
 
 void TFormula::SetInfixForm(std::string const& form) { // позвол€ет помен€ть исходную инфиксную форму
@@ -81,27 +75,19 @@ void TFormula::SetInfixForm(std::string const& form) { // позвол€ет помен€ть исх
 	infix.Frml[counter] = '\0';
 	infix.size = counter;
 	postfix.size = 0;
-	int br[MaxLength];
-	int brckts;
-	int erCnt = FormulaChecker(br, infix.Frml, brckts);
-	if (erCnt) {
-		PrintErrTable(br, brckts, erCnt);
-		throw std::logic_error("Ќеверна€ запись исходной формулы");
-	}
-	FormulaConverter();
 }
 
-int TFormula::FormulaChecker(int* Brackets, char const* form, int& size) const { // провер€ет исходную формулу на корректность
+int TFormula::FormulaChecker(int* Brackets, int& size) const { // провер€ет исходную формулу на корректность
 	TStack<int> a;
 	int cnt = 1;
 	size = 0;
 	int ercnt = 0;
-	for (int i = 0; form[i] != '\0'; ++i) {
-		if (form[i] == '(') {
+	for (int i = 0; infix.Frml[i] != '\0'; ++i) {
+		if (infix.Frml[i] == '(') {
 			a.Put(cnt);
 			cnt++;
 		}
-		if (form[i] == ')') {
+		if (infix.Frml[i] == ')') {
 			if (a.isEmpty()) {
 				Brackets[size++] = 0;
 				Brackets[size++] = cnt;
@@ -124,6 +110,13 @@ int TFormula::FormulaChecker(int* Brackets, char const* form, int& size) const {
 }
 
 void TFormula::FormulaConverter() { // преобразование инфиксной записи в постфиксную
+	int br[MaxLength];
+	int brckts;
+	int erCnt = FormulaChecker(br, brckts);
+	if (erCnt) {
+		PrintErrTable(br, brckts, erCnt);
+		throw std::logic_error("Ќеверна€ запись исходной формулы");
+	}
 	int cnt = 0;
 	TStack<char> symb;
 	for (int i = 0; i < infix.size; ++i) {
@@ -135,7 +128,7 @@ void TFormula::FormulaConverter() { // преобразование инфиксной записи в постфик
 					symb.Put(j);
 				}
 				else {
-					if (ops[symb.CheckLast()].priority < ops[j].priority && ops[j].priority > 1) {
+					if (ops[symb.CheckLast()].priority <= ops[j].priority && ops[j].priority > 1) {
 						symb.Put(j);
 					}
 					else {
